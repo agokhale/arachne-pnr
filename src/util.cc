@@ -128,6 +128,21 @@ std::string proc_self_dirname()
                 buflen--;
         return std::string(path, buflen);
 }
+#elif defined(__FreeBSD__)
+/* this could DRY some */ 
+std::string proc_self_dirname()
+{
+        char path[PATH_MAX];
+	#define PROCCURLINKPATH  "/proc/curproc/file"
+        ssize_t buflen = readlink(PROCCURLINKPATH, path, sizeof(path));
+
+        if (buflen < 0) {
+                fatal(fmt("readlink(\"" << PROCCURLINKPATH << "\") failed: " << strerror(errno)));
+        }
+        while (buflen > 0 && path[buflen-1] != '/')
+                buflen--;
+        return std::string(path, buflen);
+}
 #elif defined(__APPLE__)
 std::string proc_self_dirname()
 {
